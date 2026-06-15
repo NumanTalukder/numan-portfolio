@@ -1,11 +1,14 @@
 import { Nav } from "@/components/Nav";
 import { Media } from "@/components/Media";
 import { SceneMount } from "@/components/scene/SceneMount";
+import { ScrollController } from "@/components/ScrollController";
 import { profile, projects, skills } from "@/data/content";
 
 export default function Home() {
   return (
     <div id="top">
+      {/* Smooth scroll + scroll-driven camera (renders nothing). */}
+      <ScrollController />
       {/* Fixed full-viewport 3D atmosphere; HTML scrolls over it. */}
       <SceneMount />
       <div className="relative z-10">

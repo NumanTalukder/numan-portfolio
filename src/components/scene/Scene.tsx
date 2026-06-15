@@ -4,6 +4,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { useTheme } from "next-themes";
 import * as THREE from "three";
+import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
+import { CameraRig } from "./CameraRig";
 
 /* ------------------------------------------------------------------ theme -- */
 /**
@@ -45,18 +47,6 @@ const PALETTES: Record<"dark" | "light", Palette> = {
 };
 
 /* ------------------------------------------------------------- small hooks -- */
-function usePrefersReducedMotion() {
-  const [reduced, setReduced] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const update = () => setReduced(mq.matches);
-    update();
-    mq.addEventListener("change", update);
-    return () => mq.removeEventListener("change", update);
-  }, []);
-  return reduced;
-}
-
 function useParticleCount() {
   // Lighter starfield on small screens. Resolved once on mount (window exists
   // because this whole tree is client-only / ssr:false).
@@ -214,6 +204,7 @@ function SceneContents({
   return (
     <>
       <fog attach="fog" args={[palette.fog, 18, 120]} />
+      <CameraRig reduced={reduced} />
       <Starfield
         count={count}
         palette={palette}
