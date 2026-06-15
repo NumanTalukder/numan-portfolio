@@ -1,0 +1,24 @@
+<svg width="520" height="160" viewBox="0 0 520 160" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Numan — Software Engineer">
+  <!-- MARK: rounded tile with an N whose diagonal rises into a north-star needle -->
+  <rect x="8" y="20" width="120" height="120" rx="28" fill="#0EA5E9"/>
+  <rect x="8" y="20" width="120" height="120" rx="28" fill="url(#sheen)"/>
+  <!-- N letterform -->
+  <path d="M44 112 V58 L84 104 V52" stroke="#FFFFFF" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- rising needle continuing the right stroke toward the star -->
+  <path d="M84 52 L98 36" stroke="#FFFFFF" stroke-width="11" stroke-linecap="round" fill="none"/>
+  <!-- north star -->
+  <circle cx="103" cy="31" r="7" fill="#FFFFFF"/>
+  <circle cx="103" cy="31" r="11" fill="none" stroke="#FFFFFF" stroke-width="2" opacity="0.4"/>
+
+  <!-- WORDMARK -->
+  <text x="158" y="86" font-family="'Syne','Segoe UI',sans-serif" font-size="52" font-weight="800" letter-spacing="1" fill="#0F172A">Numan</text>
+  <!-- tagline -->
+  <text x="160" y="116" font-family="'Space Mono',ui-monospace,monospace" font-size="15" letter-spacing="4" fill="#0EA5E9">SOFTWARE ENGINEER</text>
+
+  <defs>
+    <linearGradient id="sheen" x1="8" y1="20" x2="128" y2="140" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+</svg>
