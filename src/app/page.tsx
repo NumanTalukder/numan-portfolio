@@ -1,19 +1,24 @@
 import { Nav } from "@/components/Nav";
 import { Media } from "@/components/Media";
+import { SceneMount } from "@/components/scene/SceneMount";
 import { profile, projects, skills } from "@/data/content";
 
 export default function Home() {
   return (
     <div id="top">
-      <Nav />
-      <main>
-        <Hero />
-        <About />
-        <Skills />
-        <Work />
-        <Contact />
-      </main>
-      <Footer />
+      {/* Fixed full-viewport 3D atmosphere; HTML scrolls over it. */}
+      <SceneMount />
+      <div className="relative z-10">
+        <Nav />
+        <main>
+          <Hero />
+          <About />
+          <Skills />
+          <Work />
+          <Contact />
+        </main>
+        <Footer />
+      </div>
     </div>
   );
 }
@@ -22,15 +27,6 @@ export default function Home() {
 function Hero() {
   return (
     <section className="relative flex min-h-screen items-center overflow-hidden px-5 pt-16 sm:px-8">
-      {/* soft atmospheric backdrop — placeholder for the Phase 1 3D scene */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 -z-10"
-        style={{
-          background:
-            "radial-gradient(60% 60% at 70% 20%, rgb(var(--brand)/0.18), transparent 60%), radial-gradient(50% 50% at 15% 90%, rgb(var(--brand)/0.10), transparent 60%)",
-        }}
-      />
       <div className="mx-auto w-full max-w-content">
         <p className="font-mono text-xs uppercase tracking-widest2 text-brand">
           {profile.location}
