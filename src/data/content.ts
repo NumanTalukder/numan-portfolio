@@ -90,6 +90,82 @@ export const chapters: Chapter[] = [
   },
 ];
 
+/* ----------------------------------------------------------------- voyage -- */
+/**
+ * The ordered "stops" of the voyage. The ship sails from the open-sea hero and
+ * docks at each island; clicking an island opens its detail panel. `id` selects
+ * which content renders in the panel (see StopContent). Island names and the
+ * dock teaser are editable here — pure presentation flavor.
+ */
+export type StopKind = "about" | "chapter" | "contact";
+export type Stop = {
+  id: string; // harbor | origin | arsenal | ventures | creed | horizon | contact
+  island: string; // island name shown on the map / label
+  eyebrow: string; // small label (chapter marker or role)
+  title: string; // headline shown on the island & panel
+  teaser: string; // one short line shown when docked
+  kind: StopKind;
+};
+
+export const stops: Stop[] = [
+  {
+    id: "harbor",
+    island: "The Harbor",
+    eyebrow: "Departure",
+    title: "A builder from Dhaka",
+    teaser: "Where I set out from",
+    kind: "about",
+  },
+  {
+    id: "origin",
+    island: "Origins",
+    eyebrow: "Chapter I",
+    title: "Where it began",
+    teaser: "Roots by the river",
+    kind: "chapter",
+  },
+  {
+    id: "arsenal",
+    island: "The Arsenal",
+    eyebrow: "Chapter II",
+    title: "The tools",
+    teaser: "What I sail with",
+    kind: "chapter",
+  },
+  {
+    id: "ventures",
+    island: "The Shipyards",
+    eyebrow: "Chapter III",
+    title: "What I've built",
+    teaser: "The things launched",
+    kind: "chapter",
+  },
+  {
+    id: "creed",
+    island: "The Creed",
+    eyebrow: "Chapter IV",
+    title: "How I work",
+    teaser: "The code I keep",
+    kind: "chapter",
+  },
+  {
+    id: "horizon",
+    island: "The Horizon",
+    eyebrow: "Chapter V",
+    title: "Where it's going",
+    teaser: "Charted ahead",
+    kind: "chapter",
+  },
+  {
+    id: "contact",
+    island: "Landfall",
+    eyebrow: "Arrival",
+    title: "Let's build together",
+    teaser: "Drop anchor with me",
+    kind: "contact",
+  },
+];
+
 /* ---------------------------------------------------------------- skills -- */
 export type Skill = {
   name: string;

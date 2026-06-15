@@ -5,71 +5,21 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { useTheme } from "next-themes";
 import * as THREE from "three";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
+import { PALETTES, type Palette } from "./palette";
 import { CameraRig } from "./CameraRig";
-
-/* ------------------------------------------------------------------ theme -- */
-/**
- * Atmosphere palette per theme. The container gradient is plain CSS (instant,
- * crisp) while fog/star/north-star colors are fed into the WebGL scene. Dark =
- * deep blue-black night sea; light = soft dawn over a calm horizon.
- */
-type Palette = {
-  gradient: string;
-  fog: string;
-  star: string;
-  starOpacity: number;
-  starAdditive: boolean;
-  core: string;
-  glow: string;
-  sea: string;
-  seaOpacity: number;
-  boatHull: string;
-  sail: string;
-};
-
-const PALETTES: Record<"dark" | "light", Palette> = {
-  dark: {
-    gradient:
-      "radial-gradient(125% 90% at 50% -10%, #13234a 0%, #0B1120 46%, #04060d 100%)",
-    fog: "#070d1c",
-    star: "#bcd6f7",
-    starOpacity: 0.9,
-    starAdditive: true,
-    core: "#eaf6ff",
-    glow: "#38bdf8",
-    sea: "#0f273f",
-    seaOpacity: 0.92,
-    boatHull: "#070f1e",
-    sail: "#cfe3ff",
-  },
-  light: {
-    gradient:
-      "radial-gradient(125% 95% at 50% 112%, #fde3c6 0%, #f3e0e8 24%, #e6eefb 52%, #eef3fb 78%, #F8FAFC 100%)",
-    fog: "#e2eaf6",
-    star: "#6b82a6",
-    starOpacity: 0.5,
-    starAdditive: false,
-    core: "#fff4e2",
-    glow: "#f6b35a",
-    sea: "#dbe6f4",
-    seaOpacity: 0.82,
-    boatHull: "#46566f",
-    sail: "#fff1df",
-  },
-};
+import { Water } from "./Water";
+import { Islands } from "./Islands";
+import { Ship } from "./Ship";
 
 /* ------------------------------------------------------------- small hooks -- */
 function useParticleCount() {
-  // Lighter starfield on small screens. Resolved once on mount (window exists
-  // because this whole tree is client-only / ssr:false).
-  const [count, setCount] = useState(2600);
+  const [count, setCount] = useState(2200);
   useEffect(() => {
-    setCount(window.innerWidth < 768 ? 1400 : 2600);
+    setCount(window.innerWidth < 768 ? 1200 : 2200);
   }, []);
   return count;
 }
 
-/** Soft circular sprite so points read as round stars, not squares. */
 function useSoftCircleTexture() {
   return useMemo(() => {
     if (typeof document === "undefined") return null;
@@ -113,23 +63,17 @@ function Starfield({
   const positions = useMemo(() => {
     const arr = new Float32Array(count * 3);
     for (let i = 0; i < count; i++) {
-      arr[i * 3] = (Math.random() * 2 - 1) * 55; // x spread
-      arr[i * 3 + 1] = (Math.random() * 2 - 1) * 28 + 4; // y, biased upward (sky)
-      // z kept well ahead of the camera (at z=8) so no star sits on the lens
-      // and balloons under size attenuation.
-      arr[i * 3 + 2] = -14 - Math.random() * 126;
+      arr[i * 3] = (Math.random() * 2 - 1) * 90;
+      arr[i * 3 + 1] = Math.random() * 40 + 6; // above the horizon
+      arr[i * 3 + 2] = -20 - Math.random() * 130;
     }
     return arr;
   }, [count]);
 
-  useFrame((state, delta) => {
+  useFrame((_, delta) => {
     const g = groupRef.current;
     if (!g || reduced) return;
-    // Slow continuous drift...
-    g.rotation.y += delta * 0.008;
-    // ...plus a gentle mouse parallax that eases toward the pointer.
-    g.position.x = THREE.MathUtils.lerp(g.position.x, state.pointer.x * 1.6, 0.04);
-    g.position.y = THREE.MathUtils.lerp(g.position.y, state.pointer.y * 1.0, 0.04);
+    g.rotation.y += delta * 0.006;
   });
 
   return (
@@ -141,16 +85,14 @@ function Starfield({
         <pointsMaterial
           map={texture ?? undefined}
           color={palette.star}
-          size={0.55}
+          size={0.5}
           sizeAttenuation
           transparent
           opacity={palette.starOpacity}
           depthWrite={false}
           alphaTest={0.01}
           blending={
-            palette.starAdditive
-              ? THREE.AdditiveBlending
-              : THREE.NormalBlending
+            palette.starAdditive ? THREE.AdditiveBlending : THREE.NormalBlending
           }
         />
       </points>
@@ -173,94 +115,28 @@ function NorthStar({
   useFrame((state) => {
     const s = glowRef.current;
     if (!s || reduced) return;
-    // Faint breathing pulse on the halo only.
-    const t = state.clock.elapsedTime;
-    const k = 0.85 + Math.sin(t * 0.9) * 0.12;
-    s.scale.setScalar(4.4 * k);
+    const k = 0.85 + Math.sin(state.clock.elapsedTime * 0.9) * 0.12;
+    s.scale.setScalar(5 * k);
   });
 
+  // Far ahead, above the final island — the guide the whole voyage aims at.
   return (
-    <group position={[6.5, 2.2, -24]}>
-      {/* bright core — unlit so it always reads as a light source */}
+    <group position={[0, 16, -120]}>
       <mesh>
-        <sphereGeometry args={[0.16, 16, 16]} />
+        <sphereGeometry args={[0.5, 16, 16]} />
         <meshBasicMaterial color={palette.core} toneMapped={false} />
       </mesh>
-      {/* additive halo (stand-in for the bloom added in Phase 4) */}
-      <sprite ref={glowRef} scale={[4.4, 4.4, 1]}>
+      <sprite ref={glowRef} scale={[5, 5, 1]}>
         <spriteMaterial
           map={texture ?? undefined}
           color={palette.glow}
           transparent
-          opacity={0.55}
+          opacity={0.5}
           depthWrite={false}
           blending={THREE.AdditiveBlending}
           toneMapped={false}
         />
       </sprite>
-    </group>
-  );
-}
-
-/* ----------------------------------------------------------------------- sea -- */
-function Sea({ palette }: { palette: Palette }) {
-  return (
-    // calm water surface; fog fades its far edge into the horizon line
-    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -3.6, -40]}>
-      <planeGeometry args={[400, 400]} />
-      <meshBasicMaterial
-        color={palette.sea}
-        transparent
-        opacity={palette.seaOpacity}
-      />
-    </mesh>
-  );
-}
-
-/* ---------------------------------------------------------------------- boat -- */
-/** A small low-poly sailboat near the horizon — the vessel of the voyage. */
-function Boat({ palette, reduced }: { palette: Palette; reduced: boolean }) {
-  const ref = useRef<THREE.Group>(null);
-
-  const sailGeometry = useMemo(() => {
-    const g = new THREE.BufferGeometry();
-    // a simple triangular sail
-    const verts = new Float32Array([0, 0, 0, 0, 1.15, 0, -0.82, 0, 0]);
-    g.setAttribute("position", new THREE.BufferAttribute(verts, 3));
-    g.computeVertexNormals();
-    return g;
-  }, []);
-
-  useFrame((state) => {
-    const b = ref.current;
-    if (!b || reduced) return;
-    const t = state.clock.elapsedTime;
-    b.rotation.z = Math.sin(t * 0.6) * 0.04; // gentle rocking
-    b.position.y = -3.55 + Math.sin(t * 0.8) * 0.05; // bob on the swell
-  });
-
-  return (
-    <group ref={ref} position={[5, -3.55, -34]} scale={1.3}>
-      {/* hull */}
-      <mesh>
-        <boxGeometry args={[1.5, 0.16, 0.5]} />
-        <meshBasicMaterial color={palette.boatHull} />
-      </mesh>
-      {/* mast */}
-      <mesh position={[0.16, 0.6, 0]}>
-        <cylinderGeometry args={[0.025, 0.025, 1.2, 6]} />
-        <meshBasicMaterial color={palette.boatHull} />
-      </mesh>
-      {/* sail — catches the starlight */}
-      <mesh geometry={sailGeometry} position={[0.13, 0.07, 0]}>
-        <meshBasicMaterial
-          color={palette.sail}
-          side={THREE.DoubleSide}
-          transparent
-          opacity={0.95}
-          toneMapped={false}
-        />
-      </mesh>
     </group>
   );
 }
@@ -278,16 +154,15 @@ function SceneContents({
   const texture = useSoftCircleTexture();
   return (
     <>
-      <fog attach="fog" args={[palette.fog, 18, 120]} />
+      <fog attach="fog" args={[palette.fog, palette.fogNear, palette.fogFar]} />
+      <ambientLight intensity={palette.ambient} />
+      <directionalLight position={[12, 18, 6]} intensity={palette.moon} color="#dbe6ff" />
+
       <CameraRig reduced={reduced} />
-      <Sea palette={palette} />
-      <Boat palette={palette} reduced={reduced} />
-      <Starfield
-        count={count}
-        palette={palette}
-        reduced={reduced}
-        texture={texture}
-      />
+      <Water palette={palette} reduced={reduced} segments={48} />
+      <Islands palette={palette} />
+      <Ship palette={palette} reduced={reduced} />
+      <Starfield count={count} palette={palette} reduced={reduced} texture={texture} />
       <NorthStar palette={palette} reduced={reduced} texture={texture} />
     </>
   );
@@ -299,21 +174,17 @@ export function Scene() {
   const reduced = usePrefersReducedMotion();
   const count = useParticleCount();
 
-  // Default to the dark palette until the theme resolves (this tree is
-  // client-only, so this is a single tick).
   const palette = resolvedTheme === "light" ? PALETTES.light : PALETTES.dark;
 
   return (
     <div
-      aria-hidden="true"
-      className="pointer-events-none fixed inset-0 z-0"
+      className="fixed inset-0 z-0"
       style={{ background: palette.gradient }}
     >
       <Canvas
         dpr={[1, 2]}
-        frameloop={reduced ? "demand" : "always"}
         gl={{ alpha: true, antialias: true, powerPreference: "high-performance" }}
-        camera={{ position: [0, 0, 8], fov: 55 }}
+        camera={{ position: [0, 4.6, 24], fov: 50 }}
       >
         <SceneContents palette={palette} reduced={reduced} count={count} />
       </Canvas>

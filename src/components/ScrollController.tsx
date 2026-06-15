@@ -1,36 +1,28 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "lenis";
-import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
-import { SHOTS, cameraState, resetCameraState } from "@/components/scene/cameraShots";
 import { setLenis } from "@/lib/lenis";
+import { SNAP_TS, activeStopFromT } from "@/components/scene/voyageMath";
+import { voyage, setActiveIndex, useOpenIndex } from "@/components/scene/voyageStore";
 
 gsap.registerPlugin(ScrollTrigger);
 
 /**
- * Smooth scroll + scroll-driven camera. Renders nothing.
- *
- * - Lenis owns smooth scrolling; its scroll event drives ScrollTrigger.update
- *   and gsap's ticker drives Lenis's raf loop (the canonical wiring).
- * - ONE master timeline, scrubbed by overall page progress, tweens the shared
- *   `cameraState` through the cinematic shots. The R3F <CameraRig/> eases the
- *   real camera toward that target each frame.
- * - prefers-reduced-motion: no Lenis, no timeline — native scroll and a static
- *   camera pinned to the hero shot.
+ * Drives the voyage from scroll. Lenis owns smooth scrolling and feeds
+ * ScrollTrigger; one ScrollTrigger maps overall page progress → `voyage.t`
+ * (read each frame by the scene) and snaps to each island's dock (SNAP_TS).
+ * While an island panel is open, scrolling is locked. Renders nothing.
  */
 export function ScrollController() {
-  const reduced = usePrefersReducedMotion();
+  const open = useOpenIndex();
+  const lenisRef = useRef<Lenis | null>(null);
 
   useEffect(() => {
-    if (reduced) {
-      resetCameraState();
-      return;
-    }
-
-    const lenis = new Lenis({ lerp: 0.1, smoothWheel: true });
+    const lenis = new Lenis({ lerp: 0.09, smoothWheel: true });
+    lenisRef.current = lenis;
     setLenis(lenis);
 
     const onScroll = () => ScrollTrigger.update();
@@ -40,46 +32,44 @@ export function ScrollController() {
     gsap.ticker.add(raf);
     gsap.ticker.lagSmoothing(0);
 
-    // Seed the hero shot, then chain one eased tween per subsequent shot. With
-    // equal durations under scrub, the shots are spaced evenly across the page.
-    resetCameraState(SHOTS[0]);
-    const tl = gsap.timeline({
-      defaults: { ease: "power2.inOut", duration: 1 },
-      scrollTrigger: {
-        trigger: document.documentElement,
-        start: "top top",
-        end: "bottom bottom",
-        scrub: 1,
+    const st = ScrollTrigger.create({
+      trigger: document.documentElement,
+      start: "top top",
+      end: "bottom bottom",
+      scrub: true,
+      snap: {
+        snapTo: SNAP_TS,
+        duration: { min: 0.25, max: 0.7 },
+        ease: "power2.inOut",
+      },
+      onUpdate: (self) => {
+        voyage.t = self.progress;
+        setActiveIndex(activeStopFromT(self.progress));
       },
     });
 
-    for (let i = 1; i < SHOTS.length; i++) {
-      const { pos, look } = SHOTS[i];
-      tl.to(cameraState, {
-        px: pos[0],
-        py: pos[1],
-        pz: pos[2],
-        lx: look[0],
-        ly: look[1],
-        lz: look[2],
-      });
-    }
-
-    // Recompute trigger positions once layout/fonts settle.
     const refresh = () => ScrollTrigger.refresh();
     requestAnimationFrame(refresh);
     window.addEventListener("load", refresh);
 
     return () => {
       window.removeEventListener("load", refresh);
-      tl.scrollTrigger?.kill();
-      tl.kill();
+      st.kill();
       gsap.ticker.remove(raf);
       lenis.off("scroll", onScroll);
       lenis.destroy();
+      lenisRef.current = null;
       setLenis(null);
     };
-  }, [reduced]);
+  }, []);
+
+  // Lock scrolling while an island panel is open.
+  useEffect(() => {
+    const lenis = lenisRef.current;
+    if (!lenis) return;
+    if (open !== null) lenis.stop();
+    else lenis.start();
+  }, [open]);
 
   return null;
 }
