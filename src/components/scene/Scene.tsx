@@ -10,6 +10,8 @@ import { CameraRig } from "./CameraRig";
 import { Water } from "./Water";
 import { Islands } from "./Islands";
 import { Ship } from "./Ship";
+import { FishSchool } from "./Fish";
+import { Birds } from "./Birds";
 
 /* ------------------------------------------------------------- small hooks -- */
 function useParticleCount() {
@@ -91,6 +93,7 @@ function Starfield({
           opacity={palette.starOpacity}
           depthWrite={false}
           alphaTest={0.01}
+          fog={false}
           blending={
             palette.starAdditive ? THREE.AdditiveBlending : THREE.NormalBlending
           }
@@ -124,7 +127,7 @@ function NorthStar({
     <group position={[0, 16, -120]}>
       <mesh>
         <sphereGeometry args={[0.5, 16, 16]} />
-        <meshBasicMaterial color={palette.core} toneMapped={false} />
+        <meshBasicMaterial color={palette.core} toneMapped={false} fog={false} />
       </mesh>
       <sprite ref={glowRef} scale={[5, 5, 1]}>
         <spriteMaterial
@@ -135,6 +138,37 @@ function NorthStar({
           depthWrite={false}
           blending={THREE.AdditiveBlending}
           toneMapped={false}
+          fog={false}
+        />
+      </sprite>
+    </group>
+  );
+}
+
+/* ----------------------------------------------------------------------- moon -- */
+function Moon({
+  palette,
+  texture,
+}: {
+  palette: Palette;
+  texture: THREE.Texture | null;
+}) {
+  return (
+    <group position={[-34, 30, -88]}>
+      <mesh>
+        <circleGeometry args={[3, 32]} />
+        <meshBasicMaterial color={palette.moonColor} toneMapped={false} fog={false} />
+      </mesh>
+      <sprite scale={[16, 16, 1]}>
+        <spriteMaterial
+          map={texture ?? undefined}
+          color={palette.moonColor}
+          transparent
+          opacity={0.28}
+          depthWrite={false}
+          blending={THREE.AdditiveBlending}
+          toneMapped={false}
+          fog={false}
         />
       </sprite>
     </group>
@@ -146,10 +180,12 @@ function SceneContents({
   palette,
   reduced,
   count,
+  dark,
 }: {
   palette: Palette;
   reduced: boolean;
   count: number;
+  dark: boolean;
 }) {
   const texture = useSoftCircleTexture();
   return (
@@ -159,11 +195,14 @@ function SceneContents({
       <directionalLight position={[12, 18, 6]} intensity={palette.moon} color="#dbe6ff" />
 
       <CameraRig reduced={reduced} />
-      <Water palette={palette} reduced={reduced} segments={48} />
-      <Islands palette={palette} />
+      <Water palette={palette} reduced={reduced} segments={56} />
+      <Islands palette={palette} texture={texture} />
       <Ship palette={palette} reduced={reduced} />
+      <FishSchool palette={palette} />
+      <Birds palette={palette} />
       <Starfield count={count} palette={palette} reduced={reduced} texture={texture} />
       <NorthStar palette={palette} reduced={reduced} texture={texture} />
+      {dark && <Moon palette={palette} texture={texture} />}
     </>
   );
 }
@@ -174,7 +213,8 @@ export function Scene() {
   const reduced = usePrefersReducedMotion();
   const count = useParticleCount();
 
-  const palette = resolvedTheme === "light" ? PALETTES.light : PALETTES.dark;
+  const dark = resolvedTheme !== "light";
+  const palette = dark ? PALETTES.dark : PALETTES.light;
 
   return (
     <div
@@ -186,7 +226,7 @@ export function Scene() {
         gl={{ alpha: true, antialias: true, powerPreference: "high-performance" }}
         camera={{ position: [0, 4.6, 24], fov: 50 }}
       >
-        <SceneContents palette={palette} reduced={reduced} count={count} />
+        <SceneContents palette={palette} reduced={reduced} count={count} dark={dark} />
       </Canvas>
     </div>
   );

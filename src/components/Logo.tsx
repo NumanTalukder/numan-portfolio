@@ -14,14 +14,14 @@ export function Logo({ className = "" }: { className?: string }) {
       <img
         src="/brand/numan-logo.svg"
         alt={`${profile.name} — ${profile.role}`}
-        className="block h-9 w-auto dark:hidden"
+        className="block h-12 w-auto dark:hidden sm:h-14"
         width={130}
         height={40}
       />
       <img
         src="/brand/numan-logo-dark.svg"
         alt={`${profile.name} — ${profile.role}`}
-        className="hidden h-9 w-auto dark:block"
+        className="hidden h-12 w-auto dark:block sm:h-14"
         width={130}
         height={40}
         aria-hidden="true"
