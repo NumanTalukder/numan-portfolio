@@ -21,6 +21,10 @@ type Palette = {
   starAdditive: boolean;
   core: string;
   glow: string;
+  sea: string;
+  seaOpacity: number;
+  boatHull: string;
+  sail: string;
 };
 
 const PALETTES: Record<"dark" | "light", Palette> = {
@@ -33,6 +37,10 @@ const PALETTES: Record<"dark" | "light", Palette> = {
     starAdditive: true,
     core: "#eaf6ff",
     glow: "#38bdf8",
+    sea: "#0f273f",
+    seaOpacity: 0.92,
+    boatHull: "#070f1e",
+    sail: "#cfe3ff",
   },
   light: {
     gradient:
@@ -43,6 +51,10 @@ const PALETTES: Record<"dark" | "light", Palette> = {
     starAdditive: false,
     core: "#fff4e2",
     glow: "#f6b35a",
+    sea: "#dbe6f4",
+    seaOpacity: 0.82,
+    boatHull: "#46566f",
+    sail: "#fff1df",
   },
 };
 
@@ -190,6 +202,69 @@ function NorthStar({
   );
 }
 
+/* ----------------------------------------------------------------------- sea -- */
+function Sea({ palette }: { palette: Palette }) {
+  return (
+    // calm water surface; fog fades its far edge into the horizon line
+    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -3.6, -40]}>
+      <planeGeometry args={[400, 400]} />
+      <meshBasicMaterial
+        color={palette.sea}
+        transparent
+        opacity={palette.seaOpacity}
+      />
+    </mesh>
+  );
+}
+
+/* ---------------------------------------------------------------------- boat -- */
+/** A small low-poly sailboat near the horizon — the vessel of the voyage. */
+function Boat({ palette, reduced }: { palette: Palette; reduced: boolean }) {
+  const ref = useRef<THREE.Group>(null);
+
+  const sailGeometry = useMemo(() => {
+    const g = new THREE.BufferGeometry();
+    // a simple triangular sail
+    const verts = new Float32Array([0, 0, 0, 0, 1.15, 0, -0.82, 0, 0]);
+    g.setAttribute("position", new THREE.BufferAttribute(verts, 3));
+    g.computeVertexNormals();
+    return g;
+  }, []);
+
+  useFrame((state) => {
+    const b = ref.current;
+    if (!b || reduced) return;
+    const t = state.clock.elapsedTime;
+    b.rotation.z = Math.sin(t * 0.6) * 0.04; // gentle rocking
+    b.position.y = -3.55 + Math.sin(t * 0.8) * 0.05; // bob on the swell
+  });
+
+  return (
+    <group ref={ref} position={[5, -3.55, -34]} scale={1.3}>
+      {/* hull */}
+      <mesh>
+        <boxGeometry args={[1.5, 0.16, 0.5]} />
+        <meshBasicMaterial color={palette.boatHull} />
+      </mesh>
+      {/* mast */}
+      <mesh position={[0.16, 0.6, 0]}>
+        <cylinderGeometry args={[0.025, 0.025, 1.2, 6]} />
+        <meshBasicMaterial color={palette.boatHull} />
+      </mesh>
+      {/* sail — catches the starlight */}
+      <mesh geometry={sailGeometry} position={[0.13, 0.07, 0]}>
+        <meshBasicMaterial
+          color={palette.sail}
+          side={THREE.DoubleSide}
+          transparent
+          opacity={0.95}
+          toneMapped={false}
+        />
+      </mesh>
+    </group>
+  );
+}
+
 /* --------------------------------------------------------------- scene graph -- */
 function SceneContents({
   palette,
@@ -205,6 +280,8 @@ function SceneContents({
     <>
       <fog attach="fog" args={[palette.fog, 18, 120]} />
       <CameraRig reduced={reduced} />
+      <Sea palette={palette} />
+      <Boat palette={palette} reduced={reduced} />
       <Starfield
         count={count}
         palette={palette}

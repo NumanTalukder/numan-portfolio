@@ -6,6 +6,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "lenis";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { SHOTS, cameraState, resetCameraState } from "@/components/scene/cameraShots";
+import { setLenis } from "@/lib/lenis";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -30,6 +31,7 @@ export function ScrollController() {
     }
 
     const lenis = new Lenis({ lerp: 0.1, smoothWheel: true });
+    setLenis(lenis);
 
     const onScroll = () => ScrollTrigger.update();
     lenis.on("scroll", onScroll);
@@ -75,6 +77,7 @@ export function ScrollController() {
       gsap.ticker.remove(raf);
       lenis.off("scroll", onScroll);
       lenis.destroy();
+      setLenis(null);
     };
   }, [reduced]);
 
