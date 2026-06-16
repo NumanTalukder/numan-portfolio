@@ -27,7 +27,17 @@ function sailGeo(height: number, depth: number) {
  * lantern (emissive sphere + point light) that keeps the ship from blending
  * into the dark water at night. Rides the path; bobs and rocks on the swell.
  */
-export function Ship({ palette, reduced }: { palette: Palette; reduced: boolean }) {
+export function Ship({
+  palette,
+  reduced,
+  dark,
+  texture,
+}: {
+  palette: Palette;
+  reduced: boolean;
+  dark: boolean;
+  texture: THREE.Texture | null;
+}) {
   const group = useRef<THREE.Group>(null);
   const flag = useRef<THREE.Mesh>(null);
   const wake = useRef<THREE.Sprite>(null);
@@ -121,24 +131,30 @@ export function Ship({ palette, reduced }: { palette: Palette; reduced: boolean 
         />
       </mesh>
 
-      {/* lantern: emissive bulb + warm light pool */}
+      {/* lantern — only lit at night; a dark fixture by day */}
       <mesh position={[0, 0.5, 0.55]}>
-        <sphereGeometry args={[0.07, 10, 10]} />
-        <meshBasicMaterial color={palette.lantern} toneMapped={false} />
+        <meshBasicMaterial
+          color={dark ? palette.lantern : palette.hull}
+          toneMapped={false}
+        />
+        <sphereGeometry args={[dark ? 0.07 : 0.05, 10, 10]} />
       </mesh>
-      <pointLight
-        position={[0, 0.6, 0.4]}
-        color={palette.lantern}
-        intensity={6}
-        distance={6}
-      />
+      {dark && (
+        <pointLight
+          position={[0, 0.6, 0.4]}
+          color={palette.lantern}
+          intensity={6}
+          distance={6}
+        />
+      )}
 
       {/* faint foam wake trailing behind */}
-      <sprite ref={wake} position={[0, 0.05, -1.4]} scale={[1.3, 2.4, 1]}>
+      <sprite ref={wake} position={[0, 0.05, -1.4]} scale={[1.6, 2.6, 1]}>
         <spriteMaterial
+          map={texture ?? undefined}
           color={palette.foam}
           transparent
-          opacity={0.18}
+          opacity={0.16}
           depthWrite={false}
           blending={THREE.AdditiveBlending}
         />

@@ -51,11 +51,13 @@ export function Water({
 
   const meshRef = useRef<THREE.Mesh>(null);
 
+  // Two directional swells (traveling) + shorter chop, so it reads as moving
+  // ocean rather than a gently rippling sheet.
   const wave = (x: number, y: number, t: number) =>
-    Math.sin(x * 0.11 + t * 0.7) * 0.55 +
-    Math.sin(y * 0.17 + t * 0.5) * 0.4 +
-    Math.sin((x + y) * 0.07 - t * 0.4) * 0.3 +
-    Math.sin((x - y) * 0.31 + t * 0.9) * 0.14;
+    Math.sin(x * 0.18 + y * 0.1 + t * 1.15) * 0.58 +
+    Math.sin(-x * 0.12 + y * 0.22 + t * 0.95) * 0.44 +
+    Math.sin(x * 0.46 + t * 1.7) * 0.16 +
+    Math.sin(y * 0.5 - t * 1.45) * 0.12;
 
   const paint = (t: number) => {
     const pos = geometry.attributes.position as THREE.BufferAttribute;
@@ -66,11 +68,14 @@ export function Water({
     for (let i = 0; i < parr.length; i += 3) {
       const h = wave(base[i], base[i + 1], t);
       parr[i + 2] = h;
-      // troughs deep, crests foamy
-      if (h > 0.6) {
-        c.copy(colors.sea).lerp(colors.foam, Math.min(1, (h - 0.6) / 0.55));
+      // deep troughs → sea → foamy crests (sharper, for wave feel)
+      if (h > 0.5) {
+        c.copy(colors.sea).lerp(colors.foam, Math.min(1, (h - 0.5) / 0.5));
       } else {
-        c.copy(colors.deep).lerp(colors.sea, (h + 1.4) / 2.0);
+        c.copy(colors.deep).lerp(
+          colors.sea,
+          Math.max(0, Math.min(1, (h + 1.1) / 1.5))
+        );
       }
       carr[i] = c.r;
       carr[i + 1] = c.g;

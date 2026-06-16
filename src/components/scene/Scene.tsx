@@ -195,9 +195,9 @@ function SceneContents({
       <directionalLight position={[12, 18, 6]} intensity={palette.moon} color="#dbe6ff" />
 
       <CameraRig reduced={reduced} />
-      <Water palette={palette} reduced={reduced} segments={56} />
+      <Water palette={palette} reduced={reduced} segments={90} />
       <Islands palette={palette} texture={texture} />
-      <Ship palette={palette} reduced={reduced} />
+      <Ship palette={palette} reduced={reduced} dark={dark} texture={texture} />
       <FishSchool palette={palette} />
       <Birds palette={palette} />
       <Starfield count={count} palette={palette} reduced={reduced} texture={texture} />

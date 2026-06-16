@@ -5,6 +5,7 @@ import { SceneMount } from "@/components/scene/SceneMount";
 import { ScrollController } from "@/components/ScrollController";
 import { HeroTitle } from "./HeroTitle";
 import { Compass } from "./Compass";
+import { DockCard } from "./DockCard";
 import { StopPanels } from "./StopPanels";
 import { setVoyageActive } from "@/components/scene/voyageStore";
 import { STOP_COUNT } from "@/components/scene/voyageMath";
@@ -48,6 +49,7 @@ export function VoyageMount() {
       <SceneMount />
       <HeroTitle />
       <Compass />
+      <DockCard />
       <StopPanels />
       <div
         aria-hidden

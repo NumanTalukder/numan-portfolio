@@ -2,11 +2,9 @@
 
 import { useMemo, useRef, useState } from "react";
 import { useFrame, type ThreeEvent } from "@react-three/fiber";
-import { Html } from "@react-three/drei";
 import * as THREE from "three";
 import { ISLAND_POSITIONS } from "./voyagePath";
 import { openStop, useActiveIndex } from "./voyageStore";
-import { stops } from "@/data/content";
 import type { Palette } from "./palette";
 
 const rand = (seed: number) => {
@@ -47,7 +45,6 @@ function Island({
   texture: THREE.Texture | null;
 }) {
   const pos = ISLAND_POSITIONS[index];
-  const stop = stops[index];
   const group = useRef<THREE.Group>(null);
   const halo = useRef<THREE.Sprite>(null);
   const [hovered, setHovered] = useState(false);
@@ -156,35 +153,6 @@ function Island({
           </sprite>
         </group>
       </group>
-
-      {/* Headline label — only when docked (active) or hovered. */}
-      {(active || hovered) && (
-        <Html
-          position={[0, cfg.height + 2.4, 0]}
-          center
-          distanceFactor={14}
-          zIndexRange={[20, 0]}
-        >
-          <button
-            type="button"
-            onClick={() => openStop(index)}
-            className="pointer-events-auto flex w-48 flex-col items-center rounded-xl border border-brand/60 bg-bg/85 px-3 py-2 text-center shadow-lg backdrop-blur-md"
-          >
-            <span className="font-mono text-[9px] uppercase tracking-widest text-brand">
-              {stop.eyebrow}
-            </span>
-            <span className="font-display text-sm font-bold leading-tight text-fg">
-              {stop.island}
-            </span>
-            <span className="mt-0.5 text-[11px] leading-tight text-muted">
-              {stop.teaser}
-            </span>
-            <span className="mt-1 font-mono text-[9px] uppercase tracking-widest text-brand">
-              Tap to explore
-            </span>
-          </button>
-        </Html>
-      )}
     </group>
   );
 }
