@@ -8,12 +8,19 @@ import { stops } from "@/data/content";
 /**
  * The island detail overlay. When a stop opens, the camera glides toward the
  * island (CameraRig) and this panel fades in over the dimmed scene with the
- * stop's full content. Esc or the backdrop/close button dismisses it; page
- * scroll is locked meanwhile (ScrollController), so only the panel scrolls.
+ * stop's full content.
+ *
+ * Notes from bugfixes:
+ * - z-[70] so it sits ABOVE the fixed nav (z-50); otherwise on mobile the panel
+ *   starts under the nav and the close button isn't tappable.
+ * - The scroll body carries `data-lenis-prevent` so Lenis lets it scroll
+ *   natively (Lenis otherwise swallows the wheel/touch and locks it).
+ * - A fixed header keeps the close button reachable while the body scrolls.
  */
 export function StopPanels() {
   const open = useOpenIndex();
   const closeRef = useRef<HTMLButtonElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
   const isOpen = open !== null;
   const stop = isOpen ? stops[open] : null;
 
@@ -24,12 +31,13 @@ export function StopPanels() {
     };
     window.addEventListener("keydown", onKey);
     closeRef.current?.focus();
+    if (bodyRef.current) bodyRef.current.scrollTop = 0;
     return () => window.removeEventListener("keydown", onKey);
   }, [isOpen]);
 
   return (
     <div
-      className={`fixed inset-0 z-40 flex items-start justify-center transition-opacity duration-500 sm:items-center ${
+      className={`fixed inset-0 z-[70] flex items-stretch justify-center transition-opacity duration-500 sm:items-center ${
         isOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
       }`}
       aria-hidden={!isOpen}
@@ -42,27 +50,23 @@ export function StopPanels() {
         role="dialog"
         aria-modal="true"
         aria-label={stop ? `${stop.island}: ${stop.title}` : undefined}
-        className={`relative m-4 max-h-[88vh] w-full max-w-3xl overflow-y-auto rounded-3xl border border-border/70 bg-bg-elevated/90 p-6 shadow-2xl backdrop-blur-xl transition-all duration-500 sm:m-6 sm:p-10 ${
+        className={`relative m-3 flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-3xl border border-border/70 bg-bg-elevated/95 shadow-2xl backdrop-blur-xl transition-all duration-500 sm:m-6 sm:max-h-[88vh] ${
           isOpen ? "translate-y-0 scale-100" : "translate-y-6 scale-[0.98]"
         }`}
       >
         {stop && (
           <>
-            <div className="mb-8 flex items-start justify-between gap-4">
-              <div>
-                <p className="font-mono text-xs uppercase tracking-widest2 text-brand">
-                  {stop.island} · {stop.eyebrow}
-                </p>
-                <h2 className="mt-2 font-display text-3xl font-extrabold tracking-tight sm:text-5xl">
-                  {stop.title}
-                </h2>
-              </div>
+            {/* fixed header — close stays reachable while the body scrolls */}
+            <div className="flex items-center justify-between gap-4 border-b border-border/50 px-6 py-4 sm:px-10">
+              <p className="truncate font-mono text-xs uppercase tracking-widest2 text-brand">
+                {stop.island} · {stop.eyebrow}
+              </p>
               <button
                 ref={closeRef}
                 type="button"
                 onClick={closeStop}
                 aria-label="Close"
-                className="shrink-0 rounded-full border border-border p-2 text-muted transition-colors hover:border-brand hover:text-brand"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border text-muted transition-colors hover:border-brand hover:text-brand"
               >
                 <svg
                   viewBox="0 0 24 24"
@@ -76,7 +80,18 @@ export function StopPanels() {
                 </svg>
               </button>
             </div>
-            <StopContent id={stop.id} />
+
+            {/* scrollable body (Lenis leaves it alone via data-lenis-prevent) */}
+            <div
+              ref={bodyRef}
+              data-lenis-prevent
+              className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-8 sm:px-10"
+            >
+              <h2 className="mb-8 font-display text-3xl font-extrabold tracking-tight sm:text-5xl">
+                {stop.title}
+              </h2>
+              <StopContent id={stop.id} />
+            </div>
           </>
         )}
       </div>
