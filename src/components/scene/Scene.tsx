@@ -12,6 +12,8 @@ import { Islands } from "./Islands";
 import { Ship } from "./Ship";
 import { FishSchool } from "./Fish";
 import { Birds } from "./Birds";
+import { Effects } from "./Effects";
+import { Constellation } from "./Constellation";
 
 /* ------------------------------------------------------------- small hooks -- */
 function useParticleCount() {
@@ -197,12 +199,16 @@ function SceneContents({
       <CameraRig reduced={reduced} />
       <Water palette={palette} reduced={reduced} segments={90} />
       <Islands palette={palette} texture={texture} />
+      <Constellation palette={palette} texture={texture} />
       <Ship palette={palette} reduced={reduced} dark={dark} texture={texture} />
       <FishSchool palette={palette} />
       <Birds palette={palette} />
       <Starfield count={count} palette={palette} reduced={reduced} texture={texture} />
       <NorthStar palette={palette} reduced={reduced} texture={texture} />
       {dark && <Moon palette={palette} texture={texture} />}
+      {/* Bloom/vignette is the night scene's glow; the bright dawn theme reads
+          cleaner without it (and would otherwise wash out). */}
+      {!reduced && dark && <Effects />}
     </>
   );
 }
