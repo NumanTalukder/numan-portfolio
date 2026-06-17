@@ -39,10 +39,12 @@ function Island({
   index,
   palette,
   texture,
+  mobile,
 }: {
   index: number;
   palette: Palette;
   texture: THREE.Texture | null;
+  mobile: boolean;
 }) {
   const pos = ISLAND_POSITIONS[index];
   const group = useRef<THREE.Group>(null);
@@ -55,7 +57,7 @@ function Island({
     const r = (s: number) => rand(index * 13.7 + s);
     const radius = 2.2 + r(1) * 0.7;
     const height = 2.3 + r(2) * 1.0;
-    const treeCount = 3 + Math.floor(r(3) * 4);
+    const treeCount = mobile ? 2 + Math.floor(r(3) * 2) : 3 + Math.floor(r(3) * 4);
     const trees = Array.from({ length: treeCount }, (_, i) => {
       const a = r(4 + i) * Math.PI * 2;
       const rad = 0.5 + r(20 + i) * radius * 0.55;
@@ -70,7 +72,7 @@ function Island({
       };
     });
     return { radius, height, trees, rot: r(9) * Math.PI };
-  }, [index]);
+  }, [index, mobile]);
 
   useFrame((state) => {
     const g = group.current;
@@ -160,14 +162,22 @@ function Island({
 export function Islands({
   palette,
   texture,
+  mobile,
 }: {
   palette: Palette;
   texture: THREE.Texture | null;
+  mobile: boolean;
 }) {
   return (
     <group>
       {ISLAND_POSITIONS.map((_, i) => (
-        <Island key={i} index={i} palette={palette} texture={texture} />
+        <Island
+          key={i}
+          index={i}
+          palette={palette}
+          texture={texture}
+          mobile={mobile}
+        />
       ))}
     </group>
   );

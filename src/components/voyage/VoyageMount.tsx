@@ -45,7 +45,9 @@ export function VoyageMount() {
         timer = setTimeout(check, 100); // wait out a transient 0-width report
         return;
       }
-      const ok = !reduced && w >= 1024 && webgl;
+      // The voyage now runs on phones too (performance-tuned inside Scene);
+      // only reduced-motion or no-WebGL falls back to the Logbook.
+      const ok = !reduced && w > 0 && webgl;
       setEnabled(ok);
       setVoyageActive(ok);
     };

@@ -16,10 +16,11 @@ import { Effects } from "./Effects";
 import { Constellation } from "./Constellation";
 
 /* ------------------------------------------------------------- small hooks -- */
-function useParticleCount() {
-  const [count, setCount] = useState(2200);
+function useParticleCount(mobile: boolean) {
+  const [count, setCount] = useState(mobile ? 900 : 2200);
   useEffect(() => {
-    setCount(window.innerWidth < 768 ? 1200 : 2200);
+    const w = window.innerWidth;
+    setCount(w < 768 ? 900 : w < 1024 ? 1400 : 2200);
   }, []);
   return count;
 }
@@ -183,11 +184,13 @@ function SceneContents({
   reduced,
   count,
   dark,
+  mobile,
 }: {
   palette: Palette;
   reduced: boolean;
   count: number;
   dark: boolean;
+  mobile: boolean;
 }) {
   const texture = useSoftCircleTexture();
   return (
@@ -197,18 +200,18 @@ function SceneContents({
       <directionalLight position={[12, 18, 6]} intensity={palette.moon} color="#dbe6ff" />
 
       <CameraRig reduced={reduced} />
-      <Water palette={palette} reduced={reduced} segments={90} />
-      <Islands palette={palette} texture={texture} />
+      <Water palette={palette} reduced={reduced} segments={mobile ? 40 : 90} />
+      <Islands palette={palette} texture={texture} mobile={mobile} />
       <Constellation palette={palette} texture={texture} />
       <Ship palette={palette} reduced={reduced} dark={dark} texture={texture} />
-      <FishSchool palette={palette} />
-      <Birds palette={palette} />
+      <FishSchool palette={palette} mobile={mobile} />
+      <Birds palette={palette} mobile={mobile} />
       <Starfield count={count} palette={palette} reduced={reduced} texture={texture} />
       <NorthStar palette={palette} reduced={reduced} texture={texture} />
       {dark && <Moon palette={palette} texture={texture} />}
-      {/* Bloom/vignette is the night scene's glow; the bright dawn theme reads
-          cleaner without it (and would otherwise wash out). */}
-      {!reduced && dark && <Effects />}
+      {/* Bloom is the night scene's glow; skip on mobile (perf) and in the
+          bright dawn theme (it would wash out). */}
+      {!reduced && dark && !mobile && <Effects />}
     </>
   );
 }
@@ -217,22 +220,29 @@ function SceneContents({
 export function Scene() {
   const { resolvedTheme } = useTheme();
   const reduced = usePrefersReducedMotion();
-  const count = useParticleCount();
+  // Phone-tier tuning, resolved once on mount (this tree is client-only).
+  const [mobile] = useState(
+    () => typeof window !== "undefined" && window.innerWidth < 1024
+  );
+  const count = useParticleCount(mobile);
 
   const dark = resolvedTheme !== "light";
   const palette = dark ? PALETTES.dark : PALETTES.light;
 
   return (
-    <div
-      className="fixed inset-0 z-0"
-      style={{ background: palette.gradient }}
-    >
+    <div className="fixed inset-0 z-0" style={{ background: palette.gradient }}>
       <Canvas
-        dpr={[1, 2]}
-        gl={{ alpha: true, antialias: true, powerPreference: "high-performance" }}
-        camera={{ position: [0, 4.6, 24], fov: 50 }}
+        dpr={mobile ? [1, 1.6] : [1, 2]}
+        gl={{ alpha: true, antialias: !mobile, powerPreference: "high-performance" }}
+        camera={{ position: [0, 4.6, 24], fov: mobile ? 64 : 50 }}
       >
-        <SceneContents palette={palette} reduced={reduced} count={count} dark={dark} />
+        <SceneContents
+          palette={palette}
+          reduced={reduced}
+          count={count}
+          dark={dark}
+          mobile={mobile}
+        />
       </Canvas>
     </div>
   );

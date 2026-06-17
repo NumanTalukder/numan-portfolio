@@ -68,14 +68,15 @@ function Bird({
 }
 
 /** Small flocks circling above a few islands. */
-export function Birds({ palette }: { palette: Palette }) {
+export function Birds({ palette, mobile }: { palette: Palette; mobile: boolean }) {
   const flocks = useMemo(() => {
-    const islandIdx = [1, 3, 5];
+    const islandIdx = mobile ? [2, 4] : [1, 3, 5];
+    const perFlock = mobile ? 2 : 3;
     return islandIdx.flatMap((idx, f) => {
       const center = ISLAND_POSITIONS[idx]
         .clone()
         .add(new THREE.Vector3(1.5, 5.5, 1));
-      return Array.from({ length: 3 }, (_, i) => ({
+      return Array.from({ length: perFlock }, (_, i) => ({
         key: `${f}-${i}`,
         center,
         radius: 3 + i * 0.8,
@@ -84,7 +85,7 @@ export function Birds({ palette }: { palette: Palette }) {
         phase: (i / 3) * Math.PI * 2 + f,
       }));
     });
-  }, []);
+  }, [mobile]);
 
   return (
     <group>

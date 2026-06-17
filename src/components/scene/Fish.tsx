@@ -62,13 +62,19 @@ function Fish({ spec, palette }: { spec: Spec; palette: Palette }) {
   );
 }
 
-export function FishSchool({ palette }: { palette: Palette }) {
+export function FishSchool({
+  palette,
+  mobile,
+}: {
+  palette: Palette;
+  mobile: boolean;
+}) {
   const specs = useMemo<Spec[]>(() => {
     const rnd = (s: number) => {
       const x = Math.sin(s * 91.7) * 9999;
       return x - Math.floor(x);
     };
-    return Array.from({ length: 7 }, (_, i) => ({
+    return Array.from({ length: mobile ? 4 : 7 }, (_, i) => ({
       x: (rnd(i + 1) - 0.5) * 16,
       z: 4 - i * 14 - rnd(i + 5) * 6, // spread down the route
       period: 5 + rnd(i + 9) * 5,
@@ -76,7 +82,7 @@ export function FishSchool({ palette }: { palette: Palette }) {
       height: 0.8 + rnd(i + 17) * 0.7,
       dir: rnd(i + 21) > 0.5 ? 1 : -1,
     }));
-  }, []);
+  }, [mobile]);
 
   return (
     <group>
